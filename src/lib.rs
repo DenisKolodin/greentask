@@ -3,10 +3,11 @@ extern crate coroutine;
 use std::marker::PhantomData;
 use coroutine::asymmetric::{Coroutine, Handle};
 
+#[derive(Debug)]
 pub struct Resumer<R, Y> {
     handle: Handle,
-    resume_data: PhantomData<R>,
-    yield_data: PhantomData<Y>,
+    _resume_marker: PhantomData<R>,
+    _yield_marker: PhantomData<Y>,
 }
 
 impl<R, Y> Resumer<R, Y> {
@@ -14,8 +15,8 @@ impl<R, Y> Resumer<R, Y> {
     fn new(handle: Handle) -> Self {
         Resumer {
             handle: handle,
-            resume_data: PhantomData,
-            yield_data: PhantomData,
+            _resume_marker: PhantomData,
+            _yield_marker: PhantomData,
         }
     }
 
@@ -28,10 +29,11 @@ impl<R, Y> Resumer<R, Y> {
 
 }
 
+#[derive(Debug)]
 pub struct Yielder<'a, R, Y> {
     coroutine: &'a mut Coroutine,
-    resume_data: PhantomData<R>,
-    yield_data: PhantomData<Y>,
+    _resume_marker: PhantomData<R>,
+    _yield_marker: PhantomData<Y>,
 }
 
 impl<'a, R, Y> Yielder<'a, R, Y> {
@@ -39,8 +41,8 @@ impl<'a, R, Y> Yielder<'a, R, Y> {
     fn new(coroutine: &'a mut Coroutine) -> Self {
         Yielder {
             coroutine: coroutine,
-            resume_data: PhantomData,
-            yield_data: PhantomData,
+            _resume_marker: PhantomData,
+            _yield_marker: PhantomData,
         }
     }
 
