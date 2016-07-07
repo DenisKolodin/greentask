@@ -55,11 +55,13 @@ impl<'a, R, Y> Yielder<'a, R, Y> {
 }
 
 pub fn spawn<F, R, Y>(f: F) -> Resumer<R, Y>
-    where F: FnOnce(Yielder<R, Y>, R) + 'static {
+    where F: FnOnce(Yielder<R, Y>, R) -> Y + 'static {
 
     let handle = Coroutine::spawn(|coroutine, pointer| {
         let data = unsafe { Box::from_raw(pointer as *mut R) };
-        f(Yielder::new(coroutine), *data)
+        let result = f(Yielder::new(coroutine), *data);
+        let boxed = Box::new(result);
+        Box::into_raw(boxed) as usize
     });
     Resumer::new(handle)
 }
@@ -79,6 +81,7 @@ mod tests {
         Ready,
         Integer(u64),
         Float(f64),
+        Done,
     }
 
     #[test]
@@ -87,11 +90,14 @@ mod tests {
             assert_eq!(init, Request::Init);
             assert_eq!(yielder.yield_with(Response::Ready), Request::Chars("integer"));
             assert_eq!(yielder.yield_with(Response::Integer(123)), Request::Chars("float"));
-            yielder.yield_with(Response::Float(1.23));
+            assert_eq!(yielder.yield_with(Response::Float(1.23)), Request::Chars("done"));
+            Response::Done
         });
 
         assert_eq!(resumer.resume_with(Request::Init), Response::Ready);
         assert_eq!(resumer.resume_with(Request::Chars("integer")), Response::Integer(123));
         assert_eq!(resumer.resume_with(Request::Chars("float")), Response::Float(1.23));
+        assert_eq!(resumer.resume_with(Request::Chars("done")), Response::Done);
     }
 }
+
