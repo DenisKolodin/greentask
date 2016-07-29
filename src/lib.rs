@@ -1,8 +1,23 @@
+//! Library to use coroutines as tasks with own attached data types.
+//!
+//! Usage:
+//! ```rust
+//! strcut In(&'static str)
+//! struct Out(&'static str)
+//! let mut resumer = spawn(|mut yielder, first_in| {
+//!     let second_in = yielder.yield_with(Out("first out"));
+//!     Out("second out")
+//! });
+//! resumer.resume_with(In("first in"));
+//! resumer.resume_with(In("second in"));
+//! ```
+
 extern crate coroutine;
 
 use std::marker::PhantomData;
 use coroutine::asymmetric::{Coroutine, Handle};
 
+/// Uses to resume task.
 #[derive(Debug)]
 pub struct Resumer<R, Y> {
     handle: Handle,
@@ -20,6 +35,7 @@ impl<R, Y> Resumer<R, Y> {
         }
     }
 
+    /// Resumes coroutine with the next value and will return the next from `Yielder`.
     pub fn resume_with(&mut self, r: R) -> Y {
         let boxed = Box::new(r);
         let pointer = self.handle.resume(Box::into_raw(boxed) as usize);
@@ -29,6 +45,8 @@ impl<R, Y> Resumer<R, Y> {
 
 }
 
+/// Passes to coroutine's context to yield values.
+/// This instances dont's creates manually.
 #[derive(Debug)]
 pub struct Yielder<'a, R, Y> {
     coroutine: &'a mut Coroutine,
@@ -46,6 +64,7 @@ impl<'a, R, Y> Yielder<'a, R, Y> {
         }
     }
 
+    /// Yield value to `Resumer` and will return next one passed by `Resumer`.
     pub fn yield_with(&mut self, y: Y) -> R {
         let boxed = Box::new(y);
         let pointer = self.coroutine.yield_with(Box::into_raw(boxed) as usize);
@@ -54,6 +73,7 @@ impl<'a, R, Y> Yielder<'a, R, Y> {
     }
 }
 
+/// Spawns new coroutine.
 pub fn spawn<F, R, Y>(f: F) -> Resumer<R, Y>
     where F: FnOnce(Yielder<R, Y>, R) -> Y + 'static {
 
