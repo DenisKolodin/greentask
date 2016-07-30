@@ -7,7 +7,7 @@ repository = "https://github.com/DenisKolodin/greentask/"
 homepage = "https://github.com/DenisKolodin/greentask/"
 #documentation = ""
 description = """Library to use coroutines as green tasks."""
+keywords = ["coroutine", "green", "thread", "fiber"]
 
 [dependencies]
-coroutine = { git = "https://github.com/rustcc/coroutine-rs" }
-
+coroutine = "0.6.0"
