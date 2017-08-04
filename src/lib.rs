@@ -122,5 +122,14 @@ mod tests {
         assert_eq!(resumer.resume_with(Request::Chars("float")).unwrap(), Response::Float(1.23));
         assert_eq!(resumer.resume_with(Request::Chars("done")).unwrap(), Response::Done);
     }
+
+    #[test]
+    fn test_panics() {
+        let mut resumer = spawn(|_, _| {
+            panic!("Oh no!");
+        });
+
+        assert!(resumer.resume_with(Request::Init).is_err());
+    }
 }
 
