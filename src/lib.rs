@@ -18,6 +18,7 @@ extern crate coroutine;
 
 use std::marker::PhantomData;
 use coroutine::asymmetric::{Coroutine, Handle};
+pub use coroutine::Error;
 
 /// Uses to resume task.
 #[derive(Debug)]
@@ -38,11 +39,11 @@ impl<R, Y> Resumer<R, Y> {
     }
 
     /// Resumes coroutine with the next value and will return the next from `Yielder`.
-    pub fn resume_with(&mut self, r: R) -> Y {
+    pub fn resume_with(&mut self, r: R) -> Result<Y, Error> {
         let boxed = Box::new(r);
-        let pointer = self.handle.resume(Box::into_raw(boxed) as usize);
+        let pointer = self.handle.resume(Box::into_raw(boxed) as usize)?;
         let data = unsafe { Box::from_raw(pointer as *mut Y) };
-        *data
+        Ok(*data)
     }
 
 }
@@ -116,10 +117,10 @@ mod tests {
             Response::Done
         });
 
-        assert_eq!(resumer.resume_with(Request::Init), Response::Ready);
-        assert_eq!(resumer.resume_with(Request::Chars("integer")), Response::Integer(123));
-        assert_eq!(resumer.resume_with(Request::Chars("float")), Response::Float(1.23));
-        assert_eq!(resumer.resume_with(Request::Chars("done")), Response::Done);
+        assert_eq!(resumer.resume_with(Request::Init).unwrap(), Response::Ready);
+        assert_eq!(resumer.resume_with(Request::Chars("integer")).unwrap(), Response::Integer(123));
+        assert_eq!(resumer.resume_with(Request::Chars("float")).unwrap(), Response::Float(1.23));
+        assert_eq!(resumer.resume_with(Request::Chars("done")).unwrap(), Response::Done);
     }
 }
 
